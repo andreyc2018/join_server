@@ -1,0 +1,4 @@
+#pragma once
+
+#define VERSION  "@homework_VERSION_MAJOR@.@homework_VERSION_MINOR@.@homework_VERSION_BUILD@"
+

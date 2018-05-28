@@ -1,0 +1,29 @@
+matrix:
+  include:
+  - os: linux
+    addons:
+      apt:
+        sources:
+          - ubuntu-toolchain-r-test
+        packages:
+          - g++-7
+    env:
+      - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
+language: cpp
+before_script:
+- eval "${MATRIX_EVAL}"
+- echo "deb http://archive.ubuntu.com/ubuntu xenial main universe" | sudo tee -a /etc/apt/sources.list
+- sudo apt-get update -qq
+- sudo apt-get install libasio-dev -y
+script:
+- cmake .
+- cmake --build .
+- cmake --build . --target test
+- cmake --build . --target package
+deploy:
+  provider: script
+  skip_cleanup: true
+  on:
+    branch: $TRAVIS_BRANCH
+  script:
+  - curl -T join_server-13.0.$TRAVIS_BUILD_NUMBER-Linux.deb -uandreyc2018:$BINTRAY_API_KEY "https://api.bintray.com/content/andreyc2018/otus-cpp/join_server/13.0.$TRAVIS_BUILD_NUMBER/join_server-13.0.$TRAVIS_BUILD_NUMBER-Linux.deb;deb_distribution=trusty;deb_component=main;deb_architecture=amd64;publish=1"
