@@ -14,8 +14,9 @@ class SignalHandler
         SignalHandler(asio::io_service& io_service)
             : io_service_(io_service) {}
 
-        void operator()(const std::error_code&, int)
+        void operator()(const std::error_code&, int signum)
         {
+            gLogger->debug("End of service requested by user. {}.", signum);
             io_service_.stop();
         }
 
@@ -26,18 +27,17 @@ class SignalHandler
 int main(int argc, char const** argv)
 {
     try {
-        if (argc < 3) {
+        if (argc < 2) {
             std::cout << "usage: "
                       << std::string(argv[0]).substr(std::string(argv[0]).rfind("/") + 1)
-                      << " <port> <N>\n"
+                      << " <port>\n"
                          "where:\n"
                          "  port - tcp port for incomming connections\n"
-                         "  N    - command block size\n"
                          "\nUse Ctrl-C to stop the service.\n";
             exit(1);
         }
 
-        if (argc > 3) {
+        if (argc > 2) {
             gLogger->set_level(spdlog::level::debug);
         }
 

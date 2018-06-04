@@ -27,7 +27,7 @@ void Session::do_read()
                             std::size_t length)
     {
         if (!ec) {
-            gLogger->debug("{} {} {}",
+            gLogger->debug("read input: {} {} {}",
                            std::this_thread::get_id(),
                            static_cast<const void*>(this), length);
             do_read();
@@ -43,7 +43,7 @@ void Session::do_write(std::size_t length)
                       std::size_t length)
     {
         if (!ec) {
-            gLogger->debug("{} {} {}",
+            gLogger->debug("write output: {} {} {}",
                            std::this_thread::get_id(),
                            static_cast<void*>(this), length);
             do_read();
@@ -64,6 +64,9 @@ void Server::do_accept()
                            [this](std::error_code ec)
     {
         if (!ec) {
+            gLogger->debug("starting new session: {} {}",
+                           std::this_thread::get_id(),
+                           static_cast<void*>(this));
             std::make_shared<Session>(std::move(socket_))->start();
         }
 
