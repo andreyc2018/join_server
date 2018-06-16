@@ -29,12 +29,14 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR}
         ${CMAKE_CURRENT_SOURCE_DIR}/spdlog/include)
 
 set(HEADER_FILES
+        include/logger.h
         include/server.h
-        include/logger.h)
+        include/storage.h)
 
 add_library(server STATIC
-        src/server.cpp
         src/logger.cpp
+        src/server.cpp
+        src/storage.cpp
         ${HEADER_FILES})
 
 add_executable(join_server

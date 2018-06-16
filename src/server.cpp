@@ -12,7 +12,6 @@ Session::Session(tcp::socket socket)
 
 Session::~Session()
 {
-//    socket_.close();
     gLogger->debug("eos");
 }
 
@@ -43,15 +42,12 @@ void Session::do_read()
                   << std::endl;
 
         if (bytes_transferred > 0) {
-            // Verify streambuf contains more data beyond the delimiter. (e.g.
-            // async_read_until read beyond the delimiter)
-            //        assert(self->streambuf_.size() > bytes_transferred);
-
             // Extract up to the first delimiter.
             std::string command {
                 buffers_begin(self->streambuf_.data()),
                         buffers_begin(self->streambuf_.data()) + bytes_transferred
-                        - delimiter.size()};
+                        - delimiter.size()
+            };
 
             // Consume through the first delimiter so that subsequent async_read_until
             // will not reiterate over the same data.
@@ -64,18 +60,6 @@ void Session::do_read()
             self->prompt();
         }
     });
-//    socket_.async_read_some(asio::buffer(buffer_),
-//                            [this, self](std::error_code ec,
-//                            std::size_t length)
-//    {
-//        gLogger->debug("read input: {} {} {} {}",
-//                       std::this_thread::get_id(),
-//                       static_cast<const void*>(this),
-//                       length, ec.value());
-//        if (!ec) {
-//            do_read();
-//        }
-//    });
 }
 
 void Session::do_write()
@@ -110,8 +94,7 @@ void Server::do_accept()
             gLogger->debug("starting new session: {} {}",
                            std::this_thread::get_id(),
                            static_cast<void*>(this));
-            session_ = std::make_shared<Session>(std::move(socket_));
-            session_->start();
+            std::make_shared<Session>(std::move(socket_))->start();
         }
 
         do_accept();
