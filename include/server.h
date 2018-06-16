@@ -14,13 +14,21 @@ class Session
     private:
         void do_read();
 
-        void do_write(std::size_t length);
+        void do_write();
 
         asio::ip::tcp::socket socket_;
 
-        enum { max_length = 1024 };
+        enum { max_length = 8192 };
 
-        char data_[max_length];
+        /// Buffer for incoming data.
+        std::array<char, max_length> buffer_;
+
+        /// The reply to be sent back to the client.
+        std::string reply_;
+
+        asio::streambuf streambuf_;
+
+        void prompt();
 };
 
 class Server
@@ -33,4 +41,5 @@ class Server
 
         asio::ip::tcp::acceptor acceptor_;
         asio::ip::tcp::socket socket_;
+        std::shared_ptr<Session> session_;
 };
