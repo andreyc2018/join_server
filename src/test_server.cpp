@@ -125,5 +125,11 @@ TEST(Storage_Test, Init)
     Storage s;
     EXPECT_EQ(2, s.n_tables());
 
-    s.insert("A", 0, "name");
+    EXPECT_TRUE(s.insert("A", 0, "name"));
+    EXPECT_FALSE(s.insert("A", 0, "another"));
+
+    EXPECT_TRUE(s.insert("B", 0, "name"));
+    EXPECT_FALSE(s.insert("B", 0, "another"));
+
+    EXPECT_FALSE(s.insert("C", 0, "another"));
 }

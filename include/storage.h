@@ -42,6 +42,9 @@ class Storage
         size_t n_tables() const { return tables.size(); }
 
         bool insert(const std::string& table, int id, const std::string& name);
+        void truncate(const std::string& table);
+        void intersection();
+        void symmetric_difference();
 
     private:
         table_t tables;
