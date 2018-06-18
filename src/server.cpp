@@ -12,7 +12,9 @@ Session::Session(tcp::socket socket)
 
 Session::~Session()
 {
-    gLogger->debug("eos");
+    gLogger->debug("eos: tid = {} session = {}",
+                   std::this_thread::get_id(),
+                   static_cast<void*>(this));
 }
 
 void Session::prompt()
@@ -23,6 +25,10 @@ void Session::prompt()
 
 void Session::start()
 {
+    gLogger->debug("bos: tid = {} session = {}",
+                   std::this_thread::get_id(),
+                   static_cast<void*>(this));
+
     prompt();
     do_read();
 }
@@ -53,6 +59,12 @@ void Session::do_read()
             // will not reiterate over the same data.
             self->streambuf_.consume(bytes_transferred);
 
+            if (command == "long") {
+                self->reply_.clear();
+                self->reply_.resize(10240, '.');
+                self->do_write();
+            }
+
             std::cout << "received command: " << command << "\n"
                       << "streambuf contains " << self->streambuf_.size() << " bytes."
                       << " ec = " << error_code
@@ -70,7 +82,7 @@ void Session::do_write()
                       std::size_t length)
     {
         if (!ec) {
-            gLogger->debug("write output: {} {} {}",
+            gLogger->debug("write output: tid = {} session = {} length = {}",
                            std::this_thread::get_id(),
                            static_cast<void*>(this), length);
             do_read();
@@ -91,7 +103,7 @@ void Server::do_accept()
                            [this](std::error_code ec)
     {
         if (!ec) {
-            gLogger->debug("starting new session: {} {}",
+            gLogger->debug("accepted new connection: tid = {} server = {}",
                            std::this_thread::get_id(),
                            static_cast<void*>(this));
             std::make_shared<Session>(std::move(socket_))->start();

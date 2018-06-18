@@ -1,4 +1,5 @@
 #include "storage.h"
+#include "genericfactory.h"
 #include <algorithm>
 #include <iterator>
 #include <gtest/gtest.h>
@@ -132,4 +133,107 @@ TEST(Storage_Test, Init)
     EXPECT_FALSE(s.insert("B", 0, "another"));
 
     EXPECT_FALSE(s.insert("C", 0, "another"));
+}
+
+
+class Command
+{
+    public:
+        Command(const std::string& class_name);
+        virtual ~Command() {}
+
+        virtual int run() = 0;
+
+        const std::string& name() const { return name_; }
+
+    private:
+        const std::string name_;
+};
+
+Command::Command(const std::string& class_name)
+    : name_(class_name)
+{
+}
+
+using CommandUPtr = std::unique_ptr<Command>;
+using CommandFactory = Factory<Command>;
+
+class Insert : public Command
+{
+        REGISTER(Insert, Command);
+    public:
+        Insert() : Command("Insert") {}
+
+        int run() override
+        {
+            return 1;
+        }
+};
+
+REGISTER_IMPL_UPPER(Insert, Command);
+
+class Truncate : public Command
+{
+        REGISTER(Truncate, Command);
+    public:
+        Truncate() : Command("Truncate") {}
+
+        int run() override
+        {
+            return 2;
+        }
+};
+
+REGISTER_IMPL_UPPER(Truncate, Command);
+
+class Intersection : public Command
+{
+        REGISTER(Intersection, Command);
+    public:
+        Intersection() : Command("Intersection") {}
+
+        int run() override
+        {
+            return 3;
+        }
+};
+
+REGISTER_IMPL_UPPER(Intersection, Command);
+
+class Symmetric_Difference : public Command
+{
+        REGISTER(Symmetric_Difference, Command);
+    public:
+        Symmetric_Difference() : Command("Symmetric_Difference") {}
+
+        int run() override
+        {
+            return 4;
+        }
+};
+
+REGISTER_IMPL_UPPER(Symmetric_Difference, Command);
+
+TEST(CommandFactory, List_Registered_Success)
+{
+    CommandFactory::Names list = CommandFactory::listNames();
+    std::set<std::string> expected { "INSERT", "TRUNCATE", "INTERSECTION", "SYMMETRIC_DIFFERENCE" };
+
+    for (const auto& n : list) {
+        std::cout << "got name: " << n << "\n";
+        auto found = expected.find(n);
+        EXPECT_TRUE(found != expected.end());
+    }
+}
+
+TEST(CommandFactory, Factory)
+{
+    CommandUPtr cmd_1(CommandFactory::create("INSERT"));
+    CommandUPtr cmd_2(CommandFactory::create("TRUNCATE"));
+
+    EXPECT_TRUE(bool(cmd_1));
+    EXPECT_EQ(1, cmd_1->run());
+
+    EXPECT_TRUE(bool(cmd_2));
+    EXPECT_EQ(2, cmd_2->run());
 }
