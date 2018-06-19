@@ -1,5 +1,6 @@
 #include "storage.h"
 #include "genericfactory.h"
+#include "interpreter.h"
 #include <algorithm>
 #include <iterator>
 #include <gtest/gtest.h>
@@ -135,10 +136,18 @@ TEST(Storage_Test, Init)
     EXPECT_FALSE(s.insert("C", 0, "another"));
 }
 
+struct Param
+{
+    Param(const std::string& n, const std::string v)
+        : name(n), value(v) {}
+    std::string name;
+    std::string value;
+};
 
 class Command
 {
     public:
+        using params_t = std::vector<Param>;
         Command(const std::string& class_name);
         virtual ~Command() {}
 
@@ -146,8 +155,14 @@ class Command
 
         const std::string& name() const { return name_; }
 
+        void add_param(const std::string& name, const std::string value)
+        {
+            params.emplace_back(name, value);
+        }
+
     private:
         const std::string name_;
+        params_t params;
 };
 
 Command::Command(const std::string& class_name)
@@ -214,10 +229,19 @@ class Symmetric_Difference : public Command
 
 REGISTER_IMPL_UPPER(Symmetric_Difference, Command);
 
+//class CommandStringParser
+//{
+//    public:
+//        CommandUPtr parse(const std::string& cmd)
+//        {
+//        }
+//};
+
 TEST(CommandFactory, List_Registered_Success)
 {
     CommandFactory::Names list = CommandFactory::listNames();
-    std::set<std::string> expected { "INSERT", "TRUNCATE", "INTERSECTION", "SYMMETRIC_DIFFERENCE" };
+    std::set<std::string> expected { "INSERT", "TRUNCATE",
+                                     "INTERSECTION", "SYMMETRIC_DIFFERENCE" };
 
     for (const auto& n : list) {
         std::cout << "got name: " << n << "\n";
@@ -236,4 +260,32 @@ TEST(CommandFactory, Factory)
 
     EXPECT_TRUE(bool(cmd_2));
     EXPECT_EQ(2, cmd_2->run());
+}
+
+TEST(Interpreter, Expressions)
+{
+    expr_t command_kw = std::make_shared<term_t>("INSERT|"
+                                                 "TRUNCATE|"
+                                                 "INTERSECTION|"
+                                                 "SYMMETRIC_DIFFERENCE");
+    expr_t table_name_kw = std::make_shared<term_t>("[AB]");
+    expr_t id_field_kw = std::make_shared<term_t>("[0-9]+");
+    expr_t name_field_kw = std::make_shared<term_t>("[a-z]+");
+
+    EXPECT_TRUE(command_kw->interpret("INSERT"));
+    EXPECT_FALSE(command_kw->interpret("insert"));
+    EXPECT_TRUE(command_kw->interpret("TRUNCATE"));
+    EXPECT_TRUE(command_kw->interpret("INTERSECTION"));
+    EXPECT_TRUE(command_kw->interpret("SYMMETRIC_DIFFERENCE"));
+    EXPECT_FALSE(command_kw->interpret("SYMMETRIC"));
+
+    EXPECT_TRUE(table_name_kw->interpret("A"));
+    EXPECT_TRUE(table_name_kw->interpret("B"));
+    EXPECT_FALSE(table_name_kw->interpret("randomname"));
+
+    EXPECT_FALSE(id_field_kw->interpret("A"));
+    EXPECT_TRUE(id_field_kw->interpret("088"));
+
+    EXPECT_FALSE(name_field_kw->interpret("{088}"));
+    EXPECT_TRUE(name_field_kw->interpret("wonder"));
 }

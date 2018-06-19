@@ -34,7 +34,8 @@ class Session
 class Server
 {
     public:
-        Server(asio::io_service& io_service, short port);
+        Server(asio::io_service& io_service,
+               short port);
 
     private:
         void do_accept();

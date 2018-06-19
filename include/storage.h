@@ -34,12 +34,16 @@ struct ResultRecord
 class Storage
 {
     public:
-        using records_t = std::set<Record>;
-        using table_t = std::vector<records_t>;
-        using names_t = std::map<std::string, records_t&>;
+        using table_t = std::set<Record>;
+        using tables_t = std::vector<table_t>;
+        using result_table_t = std::set<ResultRecord>;
+        using names_t = std::map<std::string, table_t&>;
+        using keys_table_t = std::vector<int>;
+        using keys_tables_t = std::vector<keys_table_t>;
+
         Storage();
 
-        size_t n_tables() const { return tables.size(); }
+        size_t n_tables() const { return tables_.size(); }
 
         bool insert(const std::string& table, int id, const std::string& name);
         void truncate(const std::string& table);
@@ -47,8 +51,11 @@ class Storage
         void symmetric_difference();
 
     private:
-        table_t tables;
-        names_t names;
+        tables_t tables_;
+        names_t names_;
 
         void add_table(const char* name);
+        std::tuple<std::string, bool> find_name(table_t& data, int key);
+        void extract_keys(keys_tables_t& table_keys);
+        void fill_result(keys_table_t& keys_ab, result_table_t& result);
 };

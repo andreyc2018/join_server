@@ -60,6 +60,7 @@ void Session::do_read()
             self->streambuf_.consume(bytes_transferred);
 
             if (command == "long") {
+                std::this_thread::sleep_for(std::chrono::seconds(5));
                 self->reply_.clear();
                 self->reply_.resize(10240, '.');
                 self->do_write();
