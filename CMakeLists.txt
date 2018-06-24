@@ -1,9 +1,7 @@
 cmake_minimum_required(VERSION 3.2)
 
-set(CMAKE_CXX_STANDARD 14)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
-set(THREADS_PREFER_PTHREAD_FLAG ON)
+set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+include(BuildType)
 
 if ($ENV{TRAVIS_BUILD_NUMBER})
     set(BUILD_NUM $ENV{TRAVIS_BUILD_NUMBER})
@@ -17,6 +15,14 @@ set(homework_VERSION_BUILD ${BUILD_NUM})
 
 project(join_server VERSION
         ${homework_VERSION_MAJOR}.${homework_VERSION_MINOR}.${homework_VERSION_BUILD})
+
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wpedantic -Wall -Wextra")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -Wpedantic -Wall -Wextra")
 
 find_package(Threads REQUIRED)
 
@@ -49,10 +55,6 @@ add_executable(join_server
     README.md)
 
 add_executable(test_version src/test_server.cpp)
-
-target_compile_options(server PRIVATE -Wpedantic -Wall -Wextra)
-target_compile_options(join_server PRIVATE -Wpedantic -Wall -Wextra)
-target_compile_options(test_version PRIVATE -Wpedantic -Wall -Wextra)
 
 target_link_libraries(join_server server
         Threads::Threads)
@@ -91,5 +93,9 @@ if(EXISTS ${CMAKE_SOURCE_DIR}/googletest/CMakeLists.txt)
     endmacro()
 endif()
 
+message(STATUS "CMAKE_CXX_FLAGS_RELEASE = ${CMAKE_CXX_FLAGS_RELEASE}")
+message(STATUS "CMAKE_CXX_FLAGS_DEBUG = ${CMAKE_CXX_FLAGS_DEBUG}")
+
 message(STATUS "Homework version
     ${homework_VERSION_MAJOR}.${homework_VERSION_MINOR}.${homework_VERSION_BUILD}")
+
