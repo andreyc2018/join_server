@@ -18,15 +18,17 @@ bool Storage::insert(const std::string& table, int id, const std::string& name)
     return false;
 }
 
-void Storage::truncate(const std::string& table)
+bool Storage::truncate(const std::string& table)
 {
     auto found = names_.find(table);
     if (found != names_.end()) {
         found->second.clear();
+        return true;
     }
+    return false;
 }
 
-void Storage::intersection()
+Storage::result_table_t Storage::intersection()
 {
     keys_tables_t table_keys;
     extract_keys(table_keys);
@@ -38,9 +40,10 @@ void Storage::intersection()
 
     result_table_t result;
     fill_result(keys_ab, result);
+    return result;
 }
 
-void Storage::symmetric_difference()
+Storage::result_table_t Storage::symmetric_difference()
 {
     keys_tables_t table_keys;
     extract_keys(table_keys);
@@ -53,6 +56,7 @@ void Storage::symmetric_difference()
 
     result_table_t result;
     fill_result(keys_ab, result);
+    return result;
 }
 
 void Storage::add_table(const char* name)

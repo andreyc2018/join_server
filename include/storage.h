@@ -4,6 +4,7 @@
 #include <vector>
 #include <map>
 #include <set>
+#include <mutex>
 
 struct Record
 {
@@ -46,9 +47,9 @@ class Storage
         size_t n_tables() const { return tables_.size(); }
 
         bool insert(const std::string& table, int id, const std::string& name);
-        void truncate(const std::string& table);
-        void intersection();
-        void symmetric_difference();
+        bool truncate(const std::string& table);
+        result_table_t intersection();
+        result_table_t symmetric_difference();
 
     private:
         tables_t tables_;
