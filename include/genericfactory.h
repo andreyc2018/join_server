@@ -32,11 +32,12 @@ class Factory
         using Registry = std::map<std::string, ClassCreator*>;
         using Names = std::vector<std::string>;
 
-        static B* create(const std::string& key)
+        template<typename... Args>
+        static B* create(const std::string& key, Args&&... args)
         {
             auto it = getTable().find(key);
             assert(it != getTable().end());
-            return it->second->create();
+            return it->second->create(std::forward<Args>(args)...);
         }
 
         static void registerRequestClass(const std::string& key,

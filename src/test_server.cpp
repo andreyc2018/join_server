@@ -148,7 +148,7 @@ class Command
 {
     public:
         using params_t = std::vector<Param>;
-        Command(const std::string& class_name);
+        Command(const std::string& class_name, Storage& storage);
         virtual ~Command() {}
 
         virtual int run() = 0;
@@ -162,11 +162,15 @@ class Command
 
     private:
         const std::string name_;
+
+    protected:
         params_t params;
+        Storage& storage_;
 };
 
-Command::Command(const std::string& class_name)
+Command::Command(const std::string& class_name, Storage& storage)
     : name_(class_name)
+    , storage_(storage)
 {
 }
 
@@ -177,7 +181,7 @@ class Insert : public Command
 {
         REGISTER(Insert, Command);
     public:
-        Insert() : Command("Insert") {}
+        Insert(Storage& storage) : Command("Insert", storage) {}
 
         int run() override
         {
@@ -191,7 +195,7 @@ class Truncate : public Command
 {
         REGISTER(Truncate, Command);
     public:
-        Truncate() : Command("Truncate") {}
+        Truncate(Storage& storage) : Command("Truncate", storage) {}
 
         int run() override
         {
@@ -205,7 +209,7 @@ class Intersection : public Command
 {
         REGISTER(Intersection, Command);
     public:
-        Intersection() : Command("Intersection") {}
+        Intersection(Storage& storage) : Command("Intersection", storage) {}
 
         int run() override
         {
@@ -219,7 +223,8 @@ class Symmetric_Difference : public Command
 {
         REGISTER(Symmetric_Difference, Command);
     public:
-        Symmetric_Difference() : Command("Symmetric_Difference") {}
+        Symmetric_Difference(Storage& storage)
+            : Command("Symmetric_Difference", storage) {}
 
         int run() override
         {
