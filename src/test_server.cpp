@@ -1,9 +1,9 @@
 #include "storage.h"
-#include "genericfactory.h"
 #include "interpreter.h"
 #include <algorithm>
 #include <iterator>
 #include <gtest/gtest.h>
+#include <gmock/gmock.h>
 
 TEST(Table_Test, Insert_Records)
 {
@@ -164,24 +164,25 @@ class Command
         const std::string name_;
 
     protected:
+        bool valid_;
         params_t params;
         Storage& storage_;
 };
 
 Command::Command(const std::string& class_name, Storage& storage)
     : name_(class_name)
+    , valid_(false)
     , storage_(storage)
 {
 }
 
 using CommandUPtr = std::unique_ptr<Command>;
-using CommandFactory = Factory<Command>;
 
 class Insert : public Command
 {
-        REGISTER(Insert, Command);
     public:
-        Insert(Storage& storage) : Command("Insert", storage) {}
+        Insert(Storage& storage)
+            : Command("Insert", storage) { valid_ = true; }
 
         int run() override
         {
@@ -189,13 +190,11 @@ class Insert : public Command
         }
 };
 
-REGISTER_IMPL_UPPER(Insert, Command);
-
 class Truncate : public Command
 {
-        REGISTER(Truncate, Command);
     public:
-        Truncate(Storage& storage) : Command("Truncate", storage) {}
+        Truncate(Storage& storage)
+            : Command("Truncate", storage) { valid_ = true; }
 
         int run() override
         {
@@ -203,13 +202,11 @@ class Truncate : public Command
         }
 };
 
-REGISTER_IMPL_UPPER(Truncate, Command);
-
 class Intersection : public Command
 {
-        REGISTER(Intersection, Command);
     public:
-        Intersection(Storage& storage) : Command("Intersection", storage) {}
+        Intersection(Storage& storage)
+            : Command("Intersection", storage) { valid_ = true; }
 
         int run() override
         {
@@ -217,14 +214,11 @@ class Intersection : public Command
         }
 };
 
-REGISTER_IMPL_UPPER(Intersection, Command);
-
 class Symmetric_Difference : public Command
 {
-        REGISTER(Symmetric_Difference, Command);
     public:
         Symmetric_Difference(Storage& storage)
-            : Command("Symmetric_Difference", storage) {}
+            : Command("Symmetric_Difference", storage) { valid_ = true; }
 
         int run() override
         {
@@ -232,7 +226,33 @@ class Symmetric_Difference : public Command
         }
 };
 
-REGISTER_IMPL_UPPER(Symmetric_Difference, Command);
+class Unknown : public Command
+{
+    public:
+        Unknown(Storage& storage)
+            : Command("Unknown", storage) {}
+
+        int run() override
+        {
+            return 3;
+        }
+};
+
+class CommandFactory
+{
+    public:
+        static CommandUPtr create(const std::string& cmd_str,
+                                  Storage& storage)
+        {
+            if (cmd_str == "INSERT") {
+                return std::make_unique<Insert>(storage);
+            }
+            else if (cmd_str == "TRUNCATE") {
+                return std::make_unique<Truncate>(storage);
+            }
+            return std::make_unique<Unknown>(storage);
+        }
+};
 
 //class CommandStringParser
 //{
@@ -242,18 +262,16 @@ REGISTER_IMPL_UPPER(Symmetric_Difference, Command);
 //        }
 //};
 
-TEST(CommandFactory, List_Registered_Success)
+class MockStorage : public Storage
 {
-    CommandFactory::Names list = CommandFactory::listNames();
-    std::set<std::string> expected { "INSERT", "TRUNCATE",
-                                     "INTERSECTION", "SYMMETRIC_DIFFERENCE" };
+    public:
+        MockStorage() : Storage(0) {}
 
-    for (const auto& n : list) {
-        std::cout << "got name: " << n << "\n";
-        auto found = expected.find(n);
-        EXPECT_TRUE(found != expected.end());
-    }
-}
+        MOCK_METHOD0(run, void());
+        MOCK_METHOD1(add_command, void(const std::string&));
+        MOCK_CONST_METHOD0(block_complete, bool());
+        MOCK_METHOD0(start_block, void());
+};
 
 TEST(CommandFactory, Factory)
 {
