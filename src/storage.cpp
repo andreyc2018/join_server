@@ -70,20 +70,20 @@ std::tuple<std::string, bool> Storage::find_name(table_t& data, int key)
     auto found = std::find_if(std::begin(data), std::end(data),
                               [&key](const Record& rec)
     {
-        return rec.id == key;
+        return rec.fields[0] == key;
     });
     if (found != std::end(data)) {
-        return std::make_tuple(found->name, true);
+        return std::make_tuple(found->fields[1].value, true);
     }
     return std::make_tuple("", false);
 }
 
 void Storage::extract_keys(Storage::keys_tables_t& table_keys)
 {
-    for (auto& t : tables_) {
-        std::vector<int> keys;
+    for (const auto& t : tables_) {
+        keys_table_t keys;
         transform(std::begin(t), std::end(t), back_inserter(keys),
-                  [](const Record& rec) { return rec.id; });
+                  [](const Record& rec) { return rec.fields[0].value; });
         table_keys.push_back(keys);
     }
 }

@@ -5,17 +5,76 @@
 #include <map>
 #include <set>
 #include <mutex>
+#include <tuple>
+#include <stdexcept>
+#include <initializer_list>
+
+struct Field
+{
+    enum class type_e { INTEGER, STRING };
+
+    type_e type;
+    std::string value;
+
+    Field(int v) : type(type_e::INTEGER), value(std::to_string(v)) {}
+    Field(std::string v) : type(type_e::STRING), value(v) {}
+    Field(const Field& f) : type(f.type), value(f.value) {}
+
+    Field& operator=(const Field& f) {
+        type = f.type;
+        value = f.value;
+        return *this;
+    }
+
+    friend bool operator==(int l, const Field& r) {
+        if (r.type != type_e::INTEGER)
+            throw std::logic_error("Unable to compare diferent types");
+        return l == std::stoi(r.value);
+    }
+
+    friend bool operator==(const Field& l, int r) {
+        return r == l;
+    }
+
+    friend bool operator<(int l, const Field& r) {
+        if (r.type != type_e::INTEGER)
+            throw std::logic_error("Unable to compare diferent types");
+        return l < std::stoi(r.value);
+    }
+
+    friend bool operator<(const Field& l, int r) {
+        return r < l;
+    }
+
+    friend bool operator<(const std::string& l, const Field& r) {
+        if (r.type != type_e::STRING)
+            throw std::logic_error("Unable to compare diferent types");
+        return l < r.value;
+    }
+
+    friend bool operator<(const Field& l, const std::string& r) {
+        return r < l;
+    }
+
+    friend bool operator<(const Field& l, const Field& r) {
+        return l.value < r;
+    }
+};
 
 struct Record
 {
-    int id;
-    std::string name;
+    size_t index_field = 0;
+    std::vector<Field> fields;
+    std::vector<std::string> names;
 
-    Record(int key, const char* value) : id(key), name(value) {}
-    Record(int key, const std::string& value) : id(key), name(value) {}
+    Record(std::initializer_list<Field> l) : fields(l) {
+        if (fields.size() < 1) {
+            throw std::logic_error("Record must have at least one field.");
+        }
+    }
 
     friend bool operator<(const Record& l, const Record& r) {
-        return l.id < r.id;
+        return l.fields[l.index_field] < r.fields[r.index_field];
     }
 };
 
