@@ -148,7 +148,7 @@ class Command
 {
     public:
         using params_t = std::vector<Param>;
-        Command(const std::string& class_name, Storage& storage);
+        Command(const std::string& command_name, IStorage& storage);
         virtual ~Command() {}
 
         virtual int run() = 0;
@@ -166,11 +166,11 @@ class Command
     protected:
         bool valid_;
         params_t params;
-        Storage& storage_;
+        IStorage& storage_;
 };
 
-Command::Command(const std::string& class_name, Storage& storage)
-    : name_(class_name)
+Command::Command(const std::string& command_name, IStorage& storage)
+    : name_(command_name)
     , valid_(false)
     , storage_(storage)
 {
@@ -181,7 +181,7 @@ using CommandUPtr = std::unique_ptr<Command>;
 class Insert : public Command
 {
     public:
-        Insert(Storage& storage)
+        Insert(IStorage& storage)
             : Command("Insert", storage) { valid_ = true; }
 
         int run() override
@@ -193,7 +193,7 @@ class Insert : public Command
 class Truncate : public Command
 {
     public:
-        Truncate(Storage& storage)
+        Truncate(IStorage& storage)
             : Command("Truncate", storage) { valid_ = true; }
 
         int run() override
@@ -205,7 +205,7 @@ class Truncate : public Command
 class Intersection : public Command
 {
     public:
-        Intersection(Storage& storage)
+        Intersection(IStorage& storage)
             : Command("Intersection", storage) { valid_ = true; }
 
         int run() override
@@ -217,7 +217,7 @@ class Intersection : public Command
 class Symmetric_Difference : public Command
 {
     public:
-        Symmetric_Difference(Storage& storage)
+        Symmetric_Difference(IStorage& storage)
             : Command("Symmetric_Difference", storage) { valid_ = true; }
 
         int run() override
@@ -229,7 +229,7 @@ class Symmetric_Difference : public Command
 class Unknown : public Command
 {
     public:
-        Unknown(Storage& storage)
+        Unknown(IStorage& storage)
             : Command("Unknown", storage) {}
 
         int run() override
@@ -242,7 +242,7 @@ class CommandFactory
 {
     public:
         static CommandUPtr create(const std::string& cmd_str,
-                                  Storage& storage)
+                                  IStorage& storage)
         {
             if (cmd_str == "INSERT") {
                 return std::make_unique<Insert>(storage);
@@ -254,29 +254,24 @@ class CommandFactory
         }
 };
 
-//class CommandStringParser
-//{
-//    public:
-//        CommandUPtr parse(const std::string& cmd)
-//        {
-//        }
-//};
-
-class MockStorage : public Storage
+class MockStorage : public IStorage
 {
     public:
-        MockStorage() : Storage(0) {}
+        MockStorage() {}
 
-        MOCK_METHOD0(run, void());
-        MOCK_METHOD1(add_command, void(const std::string&));
-        MOCK_CONST_METHOD0(block_complete, bool());
-        MOCK_METHOD0(start_block, void());
+        MOCK_CONST_METHOD0(n_tables, size_t());
+        MOCK_METHOD3(insert, bool(const std::string&,
+                                  int, const std::string&));
+        MOCK_METHOD1(truncate, bool(const std::string&));
+        MOCK_CONST_METHOD0(intersection, result_table_t());
+        MOCK_CONST_METHOD0(symmetric_difference, result_table_t());
 };
 
 TEST(CommandFactory, Factory)
 {
-    CommandUPtr cmd_1(CommandFactory::create("INSERT"));
-    CommandUPtr cmd_2(CommandFactory::create("TRUNCATE"));
+    MockStorage storage;
+    CommandUPtr cmd_1(CommandFactory::create("INSERT", storage));
+    CommandUPtr cmd_2(CommandFactory::create("TRUNCATE", storage));
 
     EXPECT_TRUE(bool(cmd_1));
     EXPECT_EQ(1, cmd_1->run());

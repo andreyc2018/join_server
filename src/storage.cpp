@@ -28,7 +28,7 @@ bool Storage::truncate(const std::string& table)
     return false;
 }
 
-Storage::result_table_t Storage::intersection()
+Storage::result_table_t Storage::intersection() const
 {
     keys_tables_t table_keys;
     extract_keys(table_keys);
@@ -43,7 +43,7 @@ Storage::result_table_t Storage::intersection()
     return result;
 }
 
-Storage::result_table_t Storage::symmetric_difference()
+Storage::result_table_t Storage::symmetric_difference() const
 {
     keys_tables_t table_keys;
     extract_keys(table_keys);
@@ -65,30 +65,31 @@ void Storage::add_table(const char* name)
     names_.emplace(name, tables_.back());
 }
 
-std::tuple<std::string, bool> Storage::find_name(table_t& data, int key)
+std::tuple<std::string, bool> Storage::find_name(const table_t& data, int key) const
 {
     auto found = std::find_if(std::begin(data), std::end(data),
                               [&key](const Record& rec)
     {
-        return rec.fields[0] == key;
+        return rec.id == key;
     });
     if (found != std::end(data)) {
-        return std::make_tuple(found->fields[1].value, true);
+        return std::make_tuple(found->name, true);
     }
     return std::make_tuple("", false);
 }
 
-void Storage::extract_keys(Storage::keys_tables_t& table_keys)
+void Storage::extract_keys(Storage::keys_tables_t& table_keys) const
 {
     for (const auto& t : tables_) {
         keys_table_t keys;
         transform(std::begin(t), std::end(t), back_inserter(keys),
-                  [](const Record& rec) { return rec.fields[0].value; });
+                  [](const Record& rec) { return rec.id; });
         table_keys.push_back(keys);
     }
 }
 
-void Storage::fill_result(keys_table_t& keys_ab, Storage::result_table_t& result)
+void Storage::fill_result(keys_table_t& keys_ab,
+                          Storage::result_table_t& result) const
 {
     for (const auto& key : keys_ab) {
         ResultRecord rr(2);

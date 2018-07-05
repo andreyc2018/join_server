@@ -5,76 +5,17 @@
 #include <map>
 #include <set>
 #include <mutex>
-#include <tuple>
-#include <stdexcept>
-#include <initializer_list>
-
-struct Field
-{
-    enum class type_e { INTEGER, STRING };
-
-    type_e type;
-    std::string value;
-
-    Field(int v) : type(type_e::INTEGER), value(std::to_string(v)) {}
-    Field(std::string v) : type(type_e::STRING), value(v) {}
-    Field(const Field& f) : type(f.type), value(f.value) {}
-
-    Field& operator=(const Field& f) {
-        type = f.type;
-        value = f.value;
-        return *this;
-    }
-
-    friend bool operator==(int l, const Field& r) {
-        if (r.type != type_e::INTEGER)
-            throw std::logic_error("Unable to compare diferent types");
-        return l == std::stoi(r.value);
-    }
-
-    friend bool operator==(const Field& l, int r) {
-        return r == l;
-    }
-
-    friend bool operator<(int l, const Field& r) {
-        if (r.type != type_e::INTEGER)
-            throw std::logic_error("Unable to compare diferent types");
-        return l < std::stoi(r.value);
-    }
-
-    friend bool operator<(const Field& l, int r) {
-        return r < l;
-    }
-
-    friend bool operator<(const std::string& l, const Field& r) {
-        if (r.type != type_e::STRING)
-            throw std::logic_error("Unable to compare diferent types");
-        return l < r.value;
-    }
-
-    friend bool operator<(const Field& l, const std::string& r) {
-        return r < l;
-    }
-
-    friend bool operator<(const Field& l, const Field& r) {
-        return l.value < r;
-    }
-};
 
 struct Record
 {
-    size_t index_field = 0;
-    std::vector<Field> fields;
-    std::vector<std::string> names;
+    int id;
+    std::string name;
 
-    Record(std::initializer_list<Field> l) : fields(l) {
-        if (fields.size() < 1) {
-            throw std::logic_error("Record must have at least one field.");
-        }
-    }
+    Record(int key, const char* value) : id(key), name(value) {}
+    Record(int key, const std::string& value) : id(key), name(value) {}
 
     friend bool operator<(const Record& l, const Record& r) {
-        return l.fields[l.index_field] < r.fields[r.index_field];
+        return l.id < r.id;
     }
 };
 
@@ -91,7 +32,7 @@ struct ResultRecord
     }
 };
 
-class Storage
+class IStorage
 {
     public:
         using table_t = std::set<Record>;
@@ -101,21 +42,36 @@ class Storage
         using keys_table_t = std::vector<int>;
         using keys_tables_t = std::vector<keys_table_t>;
 
+        virtual ~IStorage() {}
+
+        virtual size_t n_tables() const = 0;
+
+        virtual bool insert(const std::string& table,
+                            int id, const std::string& name) = 0;
+        virtual bool truncate(const std::string& table) = 0;
+        virtual result_table_t intersection() const = 0;
+        virtual result_table_t symmetric_difference() const = 0;
+};
+
+class Storage : public IStorage
+{
+    public:
         Storage();
 
-        size_t n_tables() const { return tables_.size(); }
+        size_t n_tables() const override { return tables_.size(); }
 
-        bool insert(const std::string& table, int id, const std::string& name);
-        bool truncate(const std::string& table);
-        result_table_t intersection();
-        result_table_t symmetric_difference();
+        bool insert(const std::string& table,
+                    int id, const std::string& name) override;
+        bool truncate(const std::string& table) override;
+        result_table_t intersection() const override;
+        result_table_t symmetric_difference() const override;
 
     private:
         tables_t tables_;
         names_t names_;
 
         void add_table(const char* name);
-        std::tuple<std::string, bool> find_name(table_t& data, int key);
-        void extract_keys(keys_tables_t& table_keys);
-        void fill_result(keys_table_t& keys_ab, result_table_t& result);
+        std::tuple<std::string, bool> find_name(const table_t& data, int key) const;
+        void extract_keys(keys_tables_t& table_keys) const;
+        void fill_result(keys_table_t& keys_ab, result_table_t& result) const;
 };
