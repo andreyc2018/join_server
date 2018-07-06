@@ -1,5 +1,6 @@
 #pragma once
 
+#include "processor.h"
 #include <asio.hpp>
 
 class Session

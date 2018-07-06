@@ -12,7 +12,7 @@ Session::Session(tcp::socket socket)
 
 Session::~Session()
 {
-    gLogger->debug("eos: session = {}",
+    gLogger->debug("END: session = {}",
                    static_cast<void*>(this));
 }
 
@@ -24,7 +24,7 @@ void Session::prompt()
 
 void Session::start()
 {
-    gLogger->debug("bos: session = {}",
+    gLogger->debug("START: session = {}",
                    static_cast<void*>(this));
 
     prompt();
@@ -43,11 +43,8 @@ void Session::do_read()
     {
         gLogger->debug("streambuf contains {} bytes. bytes transferred = {}",
                        self->streambuf_.size(), bytes_transferred);
-//        std::cout << "streambuf contains " << self->streambuf_.size() << " bytes."
-//                  << " bytes = " << bytes_transferred
-//                  << std::endl;
 
-        if (bytes_transferred > 0) {
+        if (bytes_transferred > 1) {
             // Extract up to the first delimiter.
             std::string command {
                 buffers_begin(self->streambuf_.data()),
@@ -69,10 +66,6 @@ void Session::do_read()
             gLogger->debug("  received command: {},"
                            " streambuf contains {} bytes. ec = {}",
                            command, self->streambuf_.size(), error_code);
-//            std::cout << "received command: " << command << "\n"
-//                      << "streambuf contains " << self->streambuf_.size() << " bytes."
-//                      << " ec = " << error_code
-//                      << std::endl;
             self->prompt();
         }
     });
