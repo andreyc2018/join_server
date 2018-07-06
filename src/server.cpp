@@ -12,8 +12,7 @@ Session::Session(tcp::socket socket)
 
 Session::~Session()
 {
-    gLogger->debug("eos: tid = {} session = {}",
-                   std::this_thread::get_id(),
+    gLogger->debug("eos: session = {}",
                    static_cast<void*>(this));
 }
 
@@ -25,8 +24,7 @@ void Session::prompt()
 
 void Session::start()
 {
-    gLogger->debug("bos: tid = {} session = {}",
-                   std::this_thread::get_id(),
+    gLogger->debug("bos: session = {}",
                    static_cast<void*>(this));
 
     prompt();
@@ -43,9 +41,11 @@ void Session::do_read()
                            [delimiter, self](const std::error_code& error_code,
                                                    std::size_t bytes_transferred)
     {
-        std::cout << "streambuf contains " << self->streambuf_.size() << " bytes."
-                  << " bytes = " << bytes_transferred
-                  << std::endl;
+        gLogger->debug("streambuf contains {} bytes. bytes transferred = {}",
+                       self->streambuf_.size(), bytes_transferred);
+//        std::cout << "streambuf contains " << self->streambuf_.size() << " bytes."
+//                  << " bytes = " << bytes_transferred
+//                  << std::endl;
 
         if (bytes_transferred > 0) {
             // Extract up to the first delimiter.
@@ -66,10 +66,13 @@ void Session::do_read()
                 self->do_write();
             }
 
-            std::cout << "received command: " << command << "\n"
-                      << "streambuf contains " << self->streambuf_.size() << " bytes."
-                      << " ec = " << error_code
-                      << std::endl;
+            gLogger->debug("  received command: {},"
+                           " streambuf contains {} bytes. ec = {}",
+                           command, self->streambuf_.size(), error_code);
+//            std::cout << "received command: " << command << "\n"
+//                      << "streambuf contains " << self->streambuf_.size() << " bytes."
+//                      << " ec = " << error_code
+//                      << std::endl;
             self->prompt();
         }
     });
@@ -83,8 +86,7 @@ void Session::do_write()
                       std::size_t length)
     {
         if (!ec) {
-            gLogger->debug("write output: tid = {} session = {} length = {}",
-                           std::this_thread::get_id(),
+            gLogger->debug("write output: session = {} length = {}",
                            static_cast<void*>(this), length);
             do_read();
         }
@@ -104,8 +106,7 @@ void Server::do_accept()
                            [this](std::error_code ec)
     {
         if (!ec) {
-            gLogger->debug("accepted new connection: tid = {} server = {}",
-                           std::this_thread::get_id(),
+            gLogger->debug("accepted new connection: server = {}",
                            static_cast<void*>(this));
             std::make_shared<Session>(std::move(socket_))->start();
         }

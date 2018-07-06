@@ -10,6 +10,7 @@ Storage::Storage()
 
 bool Storage::insert(const std::string& table, int id, const std::string& name)
 {
+    lock_t lock(m_);
     auto found = names_.find(table);
     if (found != names_.end()) {
         auto rc = found->second.emplace(id, name);
@@ -20,6 +21,7 @@ bool Storage::insert(const std::string& table, int id, const std::string& name)
 
 bool Storage::truncate(const std::string& table)
 {
+    lock_t lock(m_);
     auto found = names_.find(table);
     if (found != names_.end()) {
         found->second.clear();
@@ -28,8 +30,9 @@ bool Storage::truncate(const std::string& table)
     return false;
 }
 
-Storage::result_table_t Storage::intersection() const
+result_table_t Storage::intersection() const
 {
+    lock_t lock(m_);
     keys_tables_t table_keys;
     extract_keys(table_keys);
 
@@ -43,8 +46,9 @@ Storage::result_table_t Storage::intersection() const
     return result;
 }
 
-Storage::result_table_t Storage::symmetric_difference() const
+result_table_t Storage::symmetric_difference() const
 {
+    lock_t lock(m_);
     keys_tables_t table_keys;
     extract_keys(table_keys);
 
@@ -78,7 +82,7 @@ std::tuple<std::string, bool> Storage::find_name(const table_t& data, int key) c
     return std::make_tuple("", false);
 }
 
-void Storage::extract_keys(Storage::keys_tables_t& table_keys) const
+void Storage::extract_keys(keys_tables_t& table_keys) const
 {
     for (const auto& t : tables_) {
         keys_table_t keys;
@@ -89,7 +93,7 @@ void Storage::extract_keys(Storage::keys_tables_t& table_keys) const
 }
 
 void Storage::fill_result(keys_table_t& keys_ab,
-                          Storage::result_table_t& result) const
+                          result_table_t& result) const
 {
     for (const auto& key : keys_ab) {
         ResultRecord rr(2);

@@ -188,6 +188,13 @@ class Insert : public Command
         {
             return 1;
         }
+
+        void setTable(const std::string& table);
+
+    private:
+        std::string table_;
+        int id_;
+        std::string value_;
 };
 
 class Truncate : public Command
@@ -306,4 +313,9 @@ TEST(Interpreter, Expressions)
 
     EXPECT_FALSE(name_field_kw->interpret("{088}"));
     EXPECT_TRUE(name_field_kw->interpret("wonder"));
+}
+
+void Insert::setTable(const std::string& table)
+{
+table_ = table;
 }

@@ -6,6 +6,17 @@
 #include <set>
 #include <mutex>
 
+struct Record;
+struct ResultRecord;
+
+using table_t = std::set<Record>;
+using tables_t = std::vector<table_t>;
+using result_table_t = std::set<ResultRecord>;
+using names_t = std::map<std::string, table_t&>;
+using keys_table_t = std::vector<int>;
+using keys_tables_t = std::vector<keys_table_t>;
+using lock_t = std::lock_guard<std::mutex>;
+
 struct Record
 {
     int id;
@@ -35,21 +46,18 @@ struct ResultRecord
 class IStorage
 {
     public:
-        using table_t = std::set<Record>;
-        using tables_t = std::vector<table_t>;
-        using result_table_t = std::set<ResultRecord>;
-        using names_t = std::map<std::string, table_t&>;
-        using keys_table_t = std::vector<int>;
-        using keys_tables_t = std::vector<keys_table_t>;
-
         virtual ~IStorage() {}
 
         virtual size_t n_tables() const = 0;
 
+        // INSERT table id name
         virtual bool insert(const std::string& table,
                             int id, const std::string& name) = 0;
+        // TRUNCATE table
         virtual bool truncate(const std::string& table) = 0;
+        // INTERSECTION
         virtual result_table_t intersection() const = 0;
+        // SYMMETRIC_DIFFERENCE
         virtual result_table_t symmetric_difference() const = 0;
 };
 
@@ -69,6 +77,7 @@ class Storage : public IStorage
     private:
         tables_t tables_;
         names_t names_;
+        mutable std::mutex m_;
 
         void add_table(const char* name);
         std::tuple<std::string, bool> find_name(const table_t& data, int key) const;

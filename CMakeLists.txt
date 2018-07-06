@@ -36,14 +36,15 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR}
 
 set(HEADER_FILES
         include/interpreter.h
-        include/genericfactory.h
         include/logger.h
+        include/processor.h
         include/server.h
         include/storage.h)
 
 add_library(server STATIC
         src/interpreter.cpp
         src/logger.cpp
+        src/processor.cpp
         src/server.cpp
         src/storage.cpp
         ${HEADER_FILES})

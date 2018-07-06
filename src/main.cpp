@@ -30,9 +30,10 @@ int main(int argc, char const** argv)
         if (argc < 2) {
             std::cout << "usage: "
                       << std::string(argv[0]).substr(std::string(argv[0]).rfind("/") + 1)
-                      << " <port>\n"
+                      << " <port> [d]\n"
                          "where:\n"
                          "  port - tcp port for incomming connections\n"
+                         "  d - print debug info\n"
                          "\nUse Ctrl-C to stop the service.\n";
             exit(1);
         }
