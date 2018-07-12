@@ -1,4 +1,5 @@
 #include "processor.h"
+#include "commands.h"
 
 Processor::Processor()
 {

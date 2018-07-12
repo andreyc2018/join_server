@@ -35,6 +35,7 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR}
         ${CMAKE_CURRENT_SOURCE_DIR}/spdlog/include)
 
 set(HEADER_FILES
+        include/commands.h
         include/interpreter.h
         include/logger.h
         include/processor.h
@@ -42,6 +43,7 @@ set(HEADER_FILES
         include/storage.h)
 
 add_library(server STATIC
+        src/commands.cpp
         src/interpreter.cpp
         src/logger.cpp
         src/processor.cpp
