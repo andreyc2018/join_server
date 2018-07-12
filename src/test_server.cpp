@@ -1,5 +1,6 @@
 #include "storage.h"
 #include "interpreter.h"
+#include "processor.h"
 #include <algorithm>
 #include <iterator>
 #include <gtest/gtest.h>
