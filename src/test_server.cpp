@@ -189,7 +189,9 @@ class Insert : public Command
             return 1;
         }
 
-        void setTable(const std::string& table);
+        void setTable(const std::string& table) { table_ = table; }
+        void setId(int id) { id_ = id; }
+        void setValue(const std::string& value) { value_ = value; }
 
     private:
         std::string table_;
@@ -313,9 +315,4 @@ TEST(Interpreter, Expressions)
 
     EXPECT_FALSE(name_field_kw->interpret("{088}"));
     EXPECT_TRUE(name_field_kw->interpret("wonder"));
-}
-
-void Insert::setTable(const std::string& table)
-{
-table_ = table;
 }
