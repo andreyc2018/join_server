@@ -1,12 +1,14 @@
 #include "processor.h"
 #include "commands.h"
 
-Processor::Processor()
+Processor::Processor(IStorage& storage)
+    : IProcessor(storage)
 {
 
 }
 
-result_t Processor::execute(const std::string& command)
+ResultPrinterUPtr Processor::execute(const std::string& command)
 {
-
+    CommandUPtr cmd = CommandFactory::create(command, storage_);
+    return cmd->run();
 }

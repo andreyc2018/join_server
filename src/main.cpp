@@ -1,5 +1,6 @@
 #include "logger.h"
 #include "server.h"
+#include "storage.h"
 
 #include <iostream>
 #include <string>
@@ -48,7 +49,8 @@ int main(int argc, char const** argv)
         SignalHandler sh(io_service);
         signals.async_wait(sh);
 
-        Server s(io_service, std::atoi(argv[1]));
+        Storage db;
+        Server s(io_service, std::atoi(argv[1]), db);
 
         io_service.run();
 

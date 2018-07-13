@@ -1,12 +1,15 @@
 #include "server.h"
 #include "logger.h"
+#include "storage.h"
+#include "processor.h"
 #include <spdlog/fmt/ostr.h>
 #include <iostream>
 
 using asio::ip::tcp;
 
-Session::Session(tcp::socket socket)
+Session::Session(tcp::socket socket, IStorage& storage)
     : socket_(std::move(socket))
+    , processor(std::make_unique<Processor>(storage))
 {
 }
 
@@ -56,12 +59,9 @@ void Session::do_read()
             // will not reiterate over the same data.
             self->streambuf_.consume(bytes_transferred);
 
-            if (command == "long") {
-                std::this_thread::sleep_for(std::chrono::seconds(5));
-                self->reply_.clear();
-                self->reply_.resize(10240, '.');
-                self->do_write();
-            }
+            ResultPrinterUPtr result = self->processor->execute(command);
+            self->reply_ = result->print();
+            self->do_write();
 
             gLogger->debug("  received command: {},"
                            " streambuf contains {} bytes. ec = {}",
@@ -86,9 +86,10 @@ void Session::do_write()
     });
 }
 
-Server::Server(asio::io_service& io_service, short port)
+Server::Server(asio::io_service& io_service, short port, IStorage& storage)
     : acceptor_(io_service, tcp::endpoint(tcp::v4(), port))
     , socket_(io_service)
+    , storage_(storage)
 {
     do_accept();
 }
@@ -101,7 +102,7 @@ void Server::do_accept()
         if (!ec) {
             gLogger->debug("accepted new connection: server = {}",
                            static_cast<void*>(this));
-            std::make_shared<Session>(std::move(socket_))->start();
+            std::make_shared<Session>(std::move(socket_), storage_)->start();
         }
 
         do_accept();

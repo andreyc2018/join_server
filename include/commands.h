@@ -1,5 +1,6 @@
 #pragma once
 
+#include "resultprinter.h"
 #include <string>
 #include <memory>
 
@@ -11,7 +12,7 @@ class Command
         Command(const std::string& command_name, IStorage& storage);
         virtual ~Command() {}
 
-        virtual int run() = 0;
+        virtual ResultPrinterUPtr run() = 0;
 
         const std::string& name() const { return name_; }
 
@@ -31,9 +32,9 @@ class Insert : public Command
         Insert(IStorage& storage)
             : Command("Insert", storage) { valid_ = true; }
 
-        int run() override
+        ResultPrinterUPtr run() override
         {
-            return 1;
+            return std::make_unique<InsertPrinter>();
         }
 
         void setTable(const std::string& table) { table_ = table; }
@@ -52,9 +53,9 @@ class Truncate : public Command
         Truncate(IStorage& storage)
             : Command("Truncate", storage) { valid_ = true; }
 
-        int run() override
+        ResultPrinterUPtr run() override
         {
-            return 2;
+            return std::make_unique<TruncatePrinter>();
         }
 };
 
@@ -64,21 +65,21 @@ class Intersection : public Command
         Intersection(IStorage& storage)
             : Command("Intersection", storage) { valid_ = true; }
 
-        int run() override
+        ResultPrinterUPtr run() override
         {
-            return 3;
+            return std::make_unique<IntersectionPrinter>();
         }
 };
 
-class Symmetric_Difference : public Command
+class SymmetricDifference : public Command
 {
     public:
-        Symmetric_Difference(IStorage& storage)
-            : Command("Symmetric_Difference", storage) { valid_ = true; }
+        SymmetricDifference(IStorage& storage)
+            : Command("SymmetricDifference", storage) { valid_ = true; }
 
-        int run() override
+        ResultPrinterUPtr run() override
         {
-            return 4;
+            return std::make_unique<SymmetricDifferencePrinter>();
         }
 };
 
@@ -88,9 +89,9 @@ class Unknown : public Command
         Unknown(IStorage& storage)
             : Command("Unknown", storage) {}
 
-        int run() override
+        ResultPrinterUPtr run() override
         {
-            return 3;
+            return std::make_unique<UnknownPrinter>();
         }
 };
 

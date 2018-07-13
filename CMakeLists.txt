@@ -39,6 +39,7 @@ set(HEADER_FILES
         include/interpreter.h
         include/logger.h
         include/processor.h
+        include/resultprinter.h
         include/server.h
         include/storage.h)
 
@@ -47,6 +48,7 @@ add_library(server STATIC
         src/interpreter.cpp
         src/logger.cpp
         src/processor.cpp
+        src/resultprinter.cpp
         src/server.cpp
         src/storage.cpp
         ${HEADER_FILES})

@@ -158,10 +158,12 @@ TEST(CommandFactory, Factory)
     CommandUPtr cmd_2(CommandFactory::create("TRUNCATE", storage));
 
     EXPECT_TRUE(bool(cmd_1));
-    EXPECT_EQ(1, cmd_1->run());
+    std::string result = cmd_1->run()->name();
+    EXPECT_EQ("InsertPrinter", result);
 
     EXPECT_TRUE(bool(cmd_2));
-    EXPECT_EQ(2, cmd_2->run());
+    result = cmd_2->run()->name();
+    EXPECT_EQ("TruncatePrinter", result);
 }
 
 TEST(Interpreter, Expressions)
