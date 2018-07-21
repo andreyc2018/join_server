@@ -2,6 +2,7 @@
 
 #include "processor.h"
 #include <asio.hpp>
+#include <vector>
 
 class IStorage;
 class IProcessor;
@@ -13,6 +14,11 @@ class Session
         Session(asio::ip::tcp::socket socket, IStorage& storage);
         ~Session();
 
+        Session(const Session&) = delete;
+        Session(Session&&) = delete;
+        Session& operator=(const Session&) = delete;
+        Session& operator=(Session&&) = delete;
+
         void start();
 
     private:
@@ -23,7 +29,7 @@ class Session
         enum { max_length = 8192 };
 
         /// Buffer for incoming data.
-        std::array<char, max_length> buffer_;
+        std::array<char, max_length> buffer_{};
         /// The reply to be sent back to the client.
         std::string reply_;
         asio::streambuf streambuf_;
@@ -43,7 +49,7 @@ class Server
 
         asio::ip::tcp::acceptor acceptor_;
         asio::ip::tcp::socket socket_;
-        std::shared_ptr<Session> session_;
+        std::vector<std::shared_ptr<Session>> session_;
 
         IStorage& storage_;
 };

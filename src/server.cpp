@@ -36,49 +36,53 @@ void Session::start()
 
 void Session::do_read()
 {
-    auto self(shared_from_this());
+//    auto self(shared_from_this());
 
     const std::string delimiter = "\n";
 
     asio::async_read_until(socket_, streambuf_, delimiter,
-                           [delimiter, self](const std::error_code& error_code,
+                           [delimiter, this](const std::error_code& error_code,
                                                    std::size_t bytes_transferred)
     {
-        gLogger->debug("streambuf contains {} bytes. bytes transferred = {}",
-                       self->streambuf_.size(), bytes_transferred);
+        gLogger->debug("session = {} streambuf contains {} bytes. "
+                       "bytes transferred = {}",
+                       static_cast<void*>(this), this->streambuf_.size(),
+                       bytes_transferred);
 
         if (bytes_transferred > 1) {
             // Extract up to the first delimiter.
             std::string command {
-                buffers_begin(self->streambuf_.data()),
-                        buffers_begin(self->streambuf_.data()) + bytes_transferred
+                buffers_begin(this->streambuf_.data()),
+                        buffers_begin(this->streambuf_.data()) + bytes_transferred
                         - delimiter.size()
             };
 
             // Consume through the first delimiter so that subsequent async_read_until
             // will not reiterate over the same data.
-            self->streambuf_.consume(bytes_transferred);
+            this->streambuf_.consume(bytes_transferred);
 
-            ResultPrinterUPtr result = self->processor->execute(command);
-            self->reply_ = result->print();
-            self->do_write();
+            ResultPrinterUPtr result = this->processor->execute(command);
+            this->reply_ = result->print();
+            this->reply_.append("\n");
+            this->do_write();
 
             gLogger->debug("  received command: {},"
                            " streambuf contains {} bytes. ec = {}",
-                           command, self->streambuf_.size(), error_code);
-            self->prompt();
+                           command, this->streambuf_.size(), error_code);
+            this->prompt();
         }
     });
 }
 
 void Session::do_write()
 {
-    auto self(shared_from_this());
+//    auto self(shared_from_this());
     asio::async_write(socket_, asio::buffer(reply_, reply_.size()),
-                      [this, self](std::error_code ec,
+                      [this](std::error_code ec,
                       std::size_t length)
     {
         if (!ec) {
+            this->reply_.clear();
             gLogger->debug("write output: session = {} length = {}",
                            static_cast<void*>(this), length);
             do_read();
@@ -102,7 +106,8 @@ void Server::do_accept()
         if (!ec) {
             gLogger->debug("accepted new connection: server = {}",
                            static_cast<void*>(this));
-            std::make_shared<Session>(std::move(socket_), storage_)->start();
+            session_.push_back(std::make_shared<Session>(std::move(socket_), storage_));
+            session_.back()->start();
         }
 
         do_accept();
