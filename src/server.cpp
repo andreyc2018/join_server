@@ -41,7 +41,7 @@ void Session::do_read()
     const std::string delimiter = "\n";
 
     gLogger->debug("before read_until streambuf contains {} bytes.",
-                   self->streambuf_.size());
+                   streambuf_.size());
     asio::async_read_until(socket_, streambuf_, delimiter,
                            [delimiter, this](const std::error_code& error_code,
                                                    std::size_t bytes_transferred)
@@ -55,8 +55,8 @@ void Session::do_read()
             // Extract up to the first delimiter.
             std::string command {
                 buffers_begin(this->streambuf_.data()),
-                        buffers_begin(this->streambuf_.data()) + bytes_transferred
-                        - delimiter.size()
+                        buffers_begin(this->streambuf_.data())
+                        + bytes_transferred - delimiter.size()
             };
 
             // Consume through the first delimiter so that subsequent async_read_until
@@ -74,11 +74,11 @@ void Session::do_read()
             this->prompt();
         }
         else {
-            self->streambuf_.consume(bytes_transferred);
+            this->streambuf_.consume(bytes_transferred);
         }
     });
     gLogger->debug("after read_until streambuf contains {} bytes.",
-                   self->streambuf_.size());
+                   streambuf_.size());
 }
 
 void Session::do_write()
