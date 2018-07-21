@@ -20,7 +20,6 @@ server::server(const std::string& address, const std::string& port,
   : io_context_(1),
     signals_(io_context_),
     acceptor_(io_context_),
-    connection_manager_(),
     request_handler_(doc_root)
 {
   // Register to handle the signals that indicate when the server should exit.
